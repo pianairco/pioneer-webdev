@@ -1,0 +1,81 @@
+ir.piana.dev.common:
+  reactive-core:
+    thread-pool-size: ${THREAD_POOL_SIZE:50}
+  vertx:
+    metrics:
+      enabled: false
+      host: ${METRIC_HOST:localhost}
+      port: ${METRIC_PORT:9001}
+      endpoint: ${METRIC_ENDPOINT:}
+    prefer-native-transport: ${PREFER_NATIVE_TRANSPORT:true}
+  test:
+    web-clients:
+      items:
+        - bean-name: authApWebClient
+          isSsl: false
+          host: localhost
+          port: 8080
+          max-pool-size: ${HTTP_CLIENT_MAX_POOL_SIZE:20}
+        - bean-name: localWebClient
+          isSsl: false
+          host: localhost
+          port: 8080
+          max-pool-size: ${HTTP_CLIENT_MAX_POOL_SIZE:20}
+    mock-web-clients:
+      items:
+        - bean-name: authApWebClient
+          mock-routes:
+            - method: post
+              path: /connect/token
+              response:
+                status: 200
+                body: eyJhbGciOiJSUzI1NiIsImtpZCI6IjQ0M0I3MUI4QTJFMzMxRjUwODg2OEE5MEY3NjhCODUyIiwidHlwIjoiYXQrand0In0.eyJuYmYiOjE2ODkxNTEyMTksImV4cCI6MTY4OTE1NDgxOSwiaXNzIjoiaHR0cHM6Ly9hdXRoLmFzYW5wYXJkYWtodC5uZXQiLCJjbGllbnRfaWQiOiJqaWJpdF9tbXMiLCJwb3J0YWwtdXNlci1pZCI6IjEyODc2IiwiaWF0IjoxNjg5MTUxMjE5LCJzY29wZSI6WyJtbXNfYXBpX3Njb3BlIl19.aO8aURsIEySlEGrJNOukq1XCXkKiF0s3rZTOc0MnibIk-ikWutA2IABlz4_5rFDWWN-ehJk8SrjRKU0d9lK0OhEUgyJF6hG44m3xctaHjhgFBfuYadR44jSaP3uXhPqESBc_AlghlW04nihE5UsaHGmG1J49KXNgfDP27RSWRwmSrOrrFIj_pKYSVUcbEmCB1egsbeSZXVjbcvY2SRFPMqbsby3vhs4ToFYtWjFe8pGYO9Y3IPj3trR6wBDCyRwZIpA1Ij_EBSobq7Xw5Ql5AWhZg3NnSQPTF83YsC9Og1AmvXxgG8NSQL9LnrpbuHD55eA9tuP3bUD6eyX2CmhkAQ
+    template-engines:
+      items:
+        - name: thymeleaf
+          dir: web-ui
+          postfix: html
+          cacheable: false
+    auth-phrase-provider:
+      items:
+        - name: vertx-cookie-base
+          provider-class: ir.piana.dev.common.vertx.http.server.auth.VertxCookieBaseAuthPhraseConsumable$Default
+          configs:
+            cookie-name: session-id
+    web-server:
+      items:
+        - name: default
+          routers:
+            - default
+          template-engine-name: thymeleaf
+          auth-phrase-provider-name: vertx-cookie-base
+          host: ${HTTP_SERVER_HOST:localhost}
+          port: ${HTTP_SERVER_PORT:8080}
+          idle-timeout: ${HTTP_SERVER_IDLE_TIMEOUT:10}
+          specific-configs:
+            static-resource-base-path: web-ui
+            static-resource-dir: webroot
+    web-router:
+      items:
+        - name: default
+          routes:
+            - method: get
+              path: web-ui/:resourceFilename
+              handler-class: ir.piana.dev.common.handlers.StaticResourceHandler
+              produce-type: text/html
+            - method: get
+              path: api/test/get
+              handler-class: ir.piana.dev.common.handlers.GetHandler
+            - method: post
+              path: api/test/post
+              handler-class: ir.piana.dev.common.handlers.PostHandler
+              dto-type: ir.piana.dev.common.handlers.PostHandler$Request
+              produce-type: application/json
+            - method: post
+              path: api/test/error
+              handler-class: ir.piana.dev.common.handlers.ErrorHandler
+              dto-type: ir.piana.dev.common.handlers.ErrorHandler$Request
+              produce-type: application/json
+            - method: get
+              path: ready
+              response: '{"status": "up", "time": "12:00:00"}'

@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>ir.piana.dev</groupId>
+		<artifactId>pioneer-webdev</artifactId>
+		<version>1.0</version>
+	</parent>
+
+	<artifactId>nats-subscriber-api</artifactId>
+	<name>nats-subscriber-api</name>
+	<description>Demo project for Spring Boot</description>
+
+	<properties>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>ir.piana.dev</groupId>
+			<artifactId>common-api</artifactId>
+			<version>1.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>io.nats</groupId>
+			<artifactId>jnats</artifactId>
+			<version>${nats.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<version>${assertj.version}</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>properties-maven-plugin</artifactId>
+				<version>1.1.0</version>
+				<executions>
+					<execution>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>write-project-properties</goal>
+						</goals>
+						<configuration>
+							<outputFile>${project.build.directory}/mvn-props/mvn-props.properties</outputFile>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>io.fabric8</groupId>
+				<artifactId>docker-maven-plugin</artifactId>
+				<version>${docker.maven.plugin}</version>
+
+				<!-- Connect start/stop to validate and compile phase, respectively -->
+				<executions>
+					<execution>
+						<id>start-after-initialize</id>
+						<phase>initialize</phase>
+						<goals>
+							<goal>stop</goal>
+							<goal>start</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>stop-after-test</id>
+						<phase>test</phase>
+						<!--						<phase>generate-sources</phase>-->
+						<goals>
+							<goal>stop</goal>
+						</goals>
+					</execution>
+				</executions>
+
+				<configuration>
+					<images>
+						<image>
+							<alias>nats-main</alias>
+							<name>${docker.nats.image}</name>
+							<run>
+								<ports>
+									<port>nat.port:4222</port>
+									<port>nat.clustering.port:6222</port>
+									<port>nat.management.port:8222</port>
+								</ports>
+								<wait>
+									<time>2000</time>
+								</wait>
+								<log>
+									<enabled>true</enabled>
+									<prefix>NATS |</prefix>
+									<color>yellow</color>
+								</log>
+							</run>
+						</image>
+					</images>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.1.2</version>
+				<configuration>
+					<excludes>
+						<!--<exclude>ir/piana/dev/common/DevCommonApplication.java</exclude>-->
+						<!--<exclude>**/MessageTest.java</exclude>-->
+					</excludes>
+					<systemPropertyVariables>
+						<MESSAGING_NATS_SERVERS>${nat.port}</MESSAGING_NATS_SERVERS>
+						<NATS_SERVER_PORT>${nat.port}</NATS_SERVER_PORT>
+					</systemPropertyVariables>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
