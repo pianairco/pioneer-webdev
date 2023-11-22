@@ -30,6 +30,9 @@ public abstract class AdjustableIntervalScheduler implements Runnable {
     private String activeFrom;
     private String activeTo;
 
+    private int defaultInterval = 120;
+    private String defaultUnit = "Seconds";
+
     @Autowired
     private TaskScheduler scheduler;
 
@@ -43,7 +46,7 @@ public abstract class AdjustableIntervalScheduler implements Runnable {
     @EventListener(ApplicationReadyEvent.class)
     void createScheduler() {
         if (initialDelayUnit == null)
-            initialDelayUnit = "SECONDS";
+            initialDelayUnit = "Seconds";
         addTaskToScheduler(initialDelay, ChronoUnit.valueOf(initialDelayUnit));
     }
 
@@ -51,7 +54,9 @@ public abstract class AdjustableIntervalScheduler implements Runnable {
 
     @Override
     public final void run() {
-        logger.info("{} scheduler start running for the {} time", getSchedulerName(), counter.incrementAndGet());
+        logger.info("{} scheduler start running for the {} time at {}",
+                getSchedulerName(), counter.incrementAndGet(),
+                LocalDateTime.now().format(FixedIntervalScheduler.dateTimeFormatterForLog));
         if (Objects.nonNull(this.activeFrom) && Objects.nonNull(this.activeTo)) {
             var nowInTehran = LocalDateTime.now(ZoneId.of("Asia/Tehran"));
             var activeFrom = LocalTime.parse(this.activeFrom);
@@ -68,12 +73,27 @@ public abstract class AdjustableIntervalScheduler implements Runnable {
         try {
             IntervalByUnit interval = exec();
             if (interval != null &&
-                    (lastInterval.get().interval != interval.interval || lastInterval.get().unit != interval.unit)) {
+                    (lastInterval.get().interval != interval.interval ||
+                            lastInterval.get().unit != interval.unit)) {
                 removeTaskFromScheduler();
                 addTaskToScheduler(interval.interval, interval.unit);
+                logger.info("{} next start time is {} - {}",
+                        getSchedulerName(),
+                        interval.interval,
+                        interval.unit);
+            } else {
+                removeTaskFromScheduler();
+                addTaskToScheduler(defaultInterval, ChronoUnit.valueOf(defaultUnit));
+                logger.info("{} next start time is {} - {}",
+                        getSchedulerName(),
+                        defaultInterval,
+                        defaultUnit);
             }
         } catch (Throwable t) {
-            logger.error(getSchedulerName() + "led to error : ", t);
+            logger.error("{} scheduler faced by an error at {} => \"{}\"",
+                    getSchedulerName(),
+                    LocalDateTime.now().format(FixedIntervalScheduler.dateTimeFormatterForLog),
+                    t.getMessage(), t);
         }
 
     }

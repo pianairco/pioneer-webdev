@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -29,6 +30,8 @@ public abstract class FixedIntervalScheduler implements SchedulingConfigurer, Ru
     @Setter(AccessLevel.NONE)
     private AtomicInteger counter = new AtomicInteger(0);
 
+    public static DateTimeFormatter dateTimeFormatterForLog = DateTimeFormatter
+            .ofPattern("yyyy/MM/dd-HH:mm:ss");
 
     @Override
     public final void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
@@ -42,8 +45,17 @@ public abstract class FixedIntervalScheduler implements SchedulingConfigurer, Ru
             var activeTo = LocalTime.parse(this.activeTo);
 
             if (nowInTehran.toLocalTime().isAfter(activeFrom) && nowInTehran.toLocalTime().isBefore(activeTo)) {
-                logger.info("{} scheduler start running for the {} time", getSchedulerName(), counter.incrementAndGet());
-                this.run();
+                try {
+                    logger.info("{} scheduler start running for the {} time at {}",
+                            getSchedulerName(), counter.incrementAndGet(),
+                            LocalDateTime.now().format(dateTimeFormatterForLog));
+                    this.run();
+                } catch (Exception e) {
+                    logger.error("{} scheduler faced by an error at {} => \"{}\"",
+                            getSchedulerName(),
+                            LocalDateTime.now().format(dateTimeFormatterForLog),
+                            e.getMessage(), e);
+                }
             }
         }, SchedulerInstantUtil.trigger(
                 initialDelay, initialDelayUnit,
