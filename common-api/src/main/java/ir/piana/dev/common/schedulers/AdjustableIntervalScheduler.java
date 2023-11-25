@@ -47,7 +47,7 @@ public abstract class AdjustableIntervalScheduler implements Runnable {
     void createScheduler() {
         if (initialDelayUnit == null)
             initialDelayUnit = "Seconds";
-        addTaskToScheduler(initialDelay, ChronoUnit.valueOf(initialDelayUnit));
+        addTaskToScheduler(initialDelay, ChronoUnit.valueOf(initialDelayUnit.toUpperCase()));
     }
 
     protected abstract IntervalByUnit exec();
@@ -83,7 +83,7 @@ public abstract class AdjustableIntervalScheduler implements Runnable {
                         interval.unit);
             } else {
                 removeTaskFromScheduler();
-                addTaskToScheduler(defaultInterval, ChronoUnit.valueOf(defaultUnit));
+                addTaskToScheduler(defaultInterval, ChronoUnit.valueOf(defaultUnit.toUpperCase()));
                 logger.info("{} next start time is {} - {}",
                         getSchedulerName(),
                         defaultInterval,
