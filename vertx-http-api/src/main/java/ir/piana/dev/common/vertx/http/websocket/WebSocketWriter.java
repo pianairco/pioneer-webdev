@@ -23,4 +23,11 @@ public class WebSocketWriter {
                 JsonObject.mapFrom(new WebSocketMessage(type, id,
                         JsonObject.mapFrom(payload))).toString());
     }
+
+    public static void write (
+            ServerWebSocket serverWebSocket,
+            WebSocketMessage message) {
+        serverWebSocket.writeTextMessage(
+                JsonObject.mapFrom(message).toString());
+    }
 }

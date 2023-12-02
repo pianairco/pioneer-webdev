@@ -660,10 +660,14 @@ public class VertxHttpServerAutoConfiguration {
                 routingContext.request().pause();
                 Thread.ofVirtual()
                         .start(() -> {
-                            Object result = deferredResult.getResult();
-                            while (result == null && !deferredResult.hasResult()) {
-                                result = deferredResult.getResult();
+                            while (!deferredResult.hasResult()) {
+                                try {
+                                    Thread.sleep(10);
+                                } catch (InterruptedException e) {
+                                    throw new RuntimeException(e);
+                                }
                             }
+                            Object result = deferredResult.getResult();
                             WebSocketEstablisherRequestHandler requestHandler = (WebSocketEstablisherRequestHandler)
                                     applicationContext.getBean(handlerClass);
 
