@@ -32,6 +32,14 @@ public class HandlerDetailedError {
                 messageSource.getMessage(errorMessageKey, params, errorMessageKey, Locale.getDefault()));
     }
 
+    /*public DetailedRuntimeException generateDetailedRuntimeException(Throwable throwable) {
+        return new DetailedRuntimeException(this, throwable);
+    }
+
+    public void throwsDetailedRuntimeException(Throwable throwable) throws DetailedRuntimeException {
+        throw new DetailedRuntimeException(this, throwable);
+    }*/
+
     public static class ThrowableError {
         private HandlerErrorType type;
         private String message;

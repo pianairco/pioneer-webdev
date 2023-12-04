@@ -573,6 +573,9 @@ public class HandlerManagerAutoConfiguration {
                     if (ex instanceof CompletionException) {
                         cause = ((CompletionException) ex).getCause();
                     }
+                    if (cause instanceof DetailedRuntimeException) {
+                        cause = ((DetailedRuntimeException) cause).toHandlerRuntimeException(handlerContext);
+                    }
                     if (cause instanceof HandlerRuntimeException) {
                         logger.error(
                                 cause.getMessage(),
